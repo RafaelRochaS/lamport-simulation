@@ -1,0 +1,69 @@
+services:
+  p1:
+    build: .
+    container_name: p1
+    hostname: p1
+    environment:
+      - PROCESS_ID=p1
+      - PEERS=p2,p3,p4,p5
+      - IS_INITIATOR=true  # Tells p1 to jumpstart the very first request
+    networks:
+      - lamport_net
+    volumes:
+      - ./logs:/app/logs
+
+  p2:
+    build: .
+    container_name: p2
+    hostname: p2
+    environment:
+      - PROCESS_ID=p2
+      - PEERS=p1,p3,p4,p5
+      - IS_INITIATOR=false
+    networks:
+      - lamport_net
+    volumes:
+      - ./logs:/app/logs
+
+  p3:
+    build: .
+    container_name: p3
+    hostname: p3
+    environment:
+      - PROCESS_ID=p3
+      - PEERS=p1,p2,p4,p5
+      - IS_INITIATOR=false
+    networks:
+      - lamport_net
+    volumes:
+      - ./logs:/app/logs
+
+  p4:
+    build: .
+    container_name: p4
+    hostname: p4
+    environment:
+      - PROCESS_ID=p4
+      - PEERS=p1,p2,p3,p5
+      - IS_INITIATOR=false
+    networks:
+      - lamport_net
+    volumes:
+      - ./logs:/app/logs
+
+  p5:
+    build: .
+    container_name: p5
+    hostname: p5
+    environment:
+      - PROCESS_ID=p5
+      - PEERS=p1,p2,p3,p4
+      - IS_INITIATOR=false
+    networks:
+      - lamport_net
+    volumes:
+      - ./logs:/app/logs
+
+networks:
+  lamport_net:
+    driver: bridge
