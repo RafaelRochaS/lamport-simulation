@@ -1,0 +1,10 @@
+### Send Operation Request
+POST http://localhost:8080/
+Content-Type: application/json
+
+{
+  "operation": 0,
+  "sender": "process-1",
+  "clock": 1,
+  "durationMs": 100
+}
