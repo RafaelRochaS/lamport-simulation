@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -11,7 +13,7 @@ import (
 type Message struct {
 	Operation  Operation `json:"operation"`
 	Sender     string    `json:"sender"`
-	Clock      int8      `json:"clock"`
+	Clock      int       `json:"clock"`
 	DurationMs *int16    `json:"durationMs,omitempty"`
 	Peers      *[]string `json:"peers,omitempty"`
 	ReturnPeer *string   `json:"returnPeer,omitempty"`
@@ -21,7 +23,7 @@ type Operation int8
 
 type LocalClock struct {
 	mu    sync.Mutex
-	value int8
+	value int
 }
 
 const (
@@ -37,7 +39,7 @@ func (c *LocalClock) operationHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch message.Operation {
 	case Internal:
-		handleInternalOperation(message, c)
+		handleInternalOperation(message)
 	case ExternalSingle:
 		handleExternalSingleOperation(message)
 	case ExternalMultiple:
@@ -45,6 +47,8 @@ func (c *LocalClock) operationHandler(w http.ResponseWriter, r *http.Request) {
 	case Halt:
 		handleHaltOperation(message)
 	}
+
+	increaseClock(c, message.Clock)
 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("OK"))
@@ -54,6 +58,7 @@ func (c *LocalClock) operationHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseRequest(r *http.Request) Message {
+	defer r.Body.Close()
 	var message Message
 
 	decoder := json.NewDecoder(r.Body)
@@ -65,21 +70,17 @@ func parseRequest(r *http.Request) Message {
 	return message
 }
 
-func handleInternalOperation(m Message, c *LocalClock) {
+func handleInternalOperation(m Message) {
 	log.Println("Handling internal operation")
 
-	timer := *m.DurationMs
-	if timer == 0 {
-		timer = 1000
+	var timer int16 = 1000
+	if m.DurationMs != nil && *m.DurationMs > 0 {
+		timer = *m.DurationMs
 	}
 
+	log.Println("Timer set to: ", timer)
+
 	time.Sleep(time.Duration(timer) * time.Millisecond)
-
-	defer c.mu.Unlock()
-	c.mu.Lock()
-	c.value++
-
-	log.Println("Internal operation completed, current clock value: ", c.value)
 }
 
 func handleExternalSingleOperation(m Message) {
@@ -94,10 +95,42 @@ func handleHaltOperation(m Message) {
 	log.Println("Handling halting operation")
 }
 
+func increaseClock(c *LocalClock, receivedClock int) {
+	defer c.mu.Unlock()
+	c.mu.Lock()
+
+	maxValue := math.Max(float64(c.value), float64(receivedClock))
+
+	c.value = int(maxValue) + 1
+
+	log.Println("Clock increased, current clock value: ", c.value)
+}
+
+func callOperations(c *LocalClock) {
+	log.Println("Starting operations caller")
+
+	for {
+		sleepTime := rand.Intn(5000)
+		log.Println("Operations caller :: sleeping for:", sleepTime)
+
+		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
+
+		log.Println("Operations caller :: woke up, calling random operation")
+
+		message := &Message{
+			Clock: c.value,
+		}
+
+		handleInternalOperation(*message)
+		increaseClock(c, message.Clock)
+	}
+}
+
 func main() {
 	mux := http.NewServeMux()
 
 	clock := &LocalClock{value: 0}
+	go callOperations(clock)
 
 	mux.HandleFunc("/", clock.operationHandler)
 
