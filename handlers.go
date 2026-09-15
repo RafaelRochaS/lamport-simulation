@@ -31,12 +31,18 @@ func handleExternalSingleOperation(m Message, clockValue int) {
 	}
 
 	peers := *m.Peers
+
+	log.Println("External Single Operation :: peers: ", peers)
+
 	peerUrl := fmt.Sprintf("http://%s:8080", peers[0])
 	message := Message{
 		Operation: Internal,
 		Sender:    os.Getenv("PROCESS_ID"),
 		Clock:     clockValue,
 	}
+
+	log.Println("External Single Operation :: calling: ", peerUrl)
+	log.Println("External Single Operation :: message: ", peerUrl)
 
 	body, err := json.Marshal(message)
 	if err != nil {
@@ -48,6 +54,8 @@ func handleExternalSingleOperation(m Message, clockValue int) {
 	if err != nil {
 		log.Fatalf("Failed to send message: %v", err)
 	}
+
+	log.Println("External Single Operation :: finished operation call")
 }
 
 func handleExternalMultipleOperation(m Message) {

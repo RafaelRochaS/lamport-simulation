@@ -2,7 +2,7 @@
 FROM golang:1.26-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go build -o simulation main.go
+RUN go build -o simulation *.go
 
 # Stage 2: Final minimal image
 FROM alpine:latest
