@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"math"
 	"math/rand"
@@ -85,8 +87,30 @@ func callOperations(c *LocalClock) {
 				Peers:     &peersFinal,
 			}
 
-			handleExternalSingleOperation(*message, c.value)
 			increaseClock(c, message.Clock)
+			handleExternalSingleOperation(*message, c.value)
 		}
 	}
+}
+
+func callPeer(peer string, message *Message) {
+
+	peerUrl := fmt.Sprintf("http://%s:8080", peer)
+
+	slog.Debug("callPeer :: calling: ", peerUrl)
+	slog.Debug("callPeer :: message: ", peerUrl)
+
+	body, err := json.Marshal(message)
+	if err != nil {
+		slog.Error("Failed to marshal message: %v", err)
+		os.Exit(1)
+	}
+
+	_, err = http.Post(peerUrl, "application/json", bytes.NewBuffer(body))
+
+	if err != nil {
+		slog.Error("Failed to send message: %v", err)
+		os.Exit(1)
+	}
+
 }

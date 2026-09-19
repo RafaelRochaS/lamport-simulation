@@ -14,16 +14,17 @@ func (c *LocalClock) operationHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch message.Operation {
 	case Internal:
+		increaseClock(c, message.Clock)
 		handleInternalOperation(message)
 	case ExternalSingle:
+		increaseClock(c, message.Clock)
 		handleExternalSingleOperation(message, c.value)
 	case ExternalMultiple:
+		increaseClock(c, message.Clock)
 		handleExternalMultipleOperation(message)
 	case Halt:
 		handleHaltOperation(message)
 	}
-
-	increaseClock(c, message.Clock)
 
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("OK"))
