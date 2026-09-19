@@ -6,6 +6,7 @@ services:
     environment:
       - PROCESS_ID=p1
       - PEERS=p2,p3,p4,p5
+      - LOG_LEVEL=DEBUG
     networks:
       - lamport_net
     volumes:
@@ -18,6 +19,7 @@ services:
     environment:
       - PROCESS_ID=p2
       - PEERS=p1,p3,p4,p5
+      - LOG_LEVEL=INFO
     networks:
       - lamport_net
     volumes:
@@ -30,6 +32,7 @@ services:
     environment:
       - PROCESS_ID=p3
       - PEERS=p1,p2,p4,p5
+      - LOG_LEVEL=INFO
     networks:
       - lamport_net
     volumes:
@@ -42,6 +45,7 @@ services:
     environment:
       - PROCESS_ID=p4
       - PEERS=p1,p2,p3,p5
+      - LOG_LEVEL=INFO
     networks:
       - lamport_net
     volumes:
@@ -54,6 +58,7 @@ services:
     environment:
       - PROCESS_ID=p5
       - PEERS=p1,p2,p3,p4
+      - LOG_LEVEL=INFO
     networks:
       - lamport_net
     volumes:

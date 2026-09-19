@@ -4,35 +4,36 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
 )
 
 func handleInternalOperation(m Message) {
-	log.Println("Handling internal operation")
+	slog.Info("Handling internal operation")
 
 	var timer int16 = 1000
 	if m.DurationMs != nil && *m.DurationMs > 0 {
 		timer = *m.DurationMs
 	}
 
-	log.Println("Timer set to: ", timer)
+	slog.Debug("Timer set to: ", timer)
 
 	time.Sleep(time.Duration(timer) * time.Millisecond)
 }
 
 func handleExternalSingleOperation(m Message, clockValue int) {
-	log.Println("Handling external single operation")
+	slog.Info("Handling external single operation")
 
 	if m.Peers == nil || len(*m.Peers) == 0 {
-		log.Fatalf("No peers provided")
+		slog.Error("No peers provided")
+		os.Exit(1)
 	}
 
 	peers := *m.Peers
 
-	log.Println("External Single Operation :: peers: ", peers)
+	slog.Debug("External Single Operation :: peers: ", peers)
 
 	peerUrl := fmt.Sprintf("http://%s:8080", peers[0])
 	message := Message{
@@ -41,27 +42,29 @@ func handleExternalSingleOperation(m Message, clockValue int) {
 		Clock:     clockValue,
 	}
 
-	log.Println("External Single Operation :: calling: ", peerUrl)
-	log.Println("External Single Operation :: message: ", peerUrl)
+	slog.Debug("External Single Operation :: calling: ", peerUrl)
+	slog.Debug("External Single Operation :: message: ", peerUrl)
 
 	body, err := json.Marshal(message)
 	if err != nil {
-		log.Fatalf("Failed to marshal message: %v", err)
+		slog.Error("Failed to marshal message: %v", err)
+		os.Exit(1)
 	}
 
 	_, err = http.Post(peerUrl, "application/json", bytes.NewBuffer(body))
 
 	if err != nil {
-		log.Fatalf("Failed to send message: %v", err)
+		slog.Error("Failed to send message: %v", err)
+		os.Exit(1)
 	}
 
-	log.Println("External Single Operation :: finished operation call")
+	slog.Info("External Single Operation :: finished operation call")
 }
 
 func handleExternalMultipleOperation(m Message) {
-	log.Println("Handling external multiple operation")
+	slog.Info("Handling external multiple operation")
 }
 
 func handleHaltOperation(m Message) {
-	log.Println("Handling halting operation")
+	slog.Info("Handling halting operation")
 }

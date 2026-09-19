@@ -11,9 +11,31 @@ type Message struct {
 	ReturnPeer *string   `json:"returnPeer,omitempty"`
 }
 
-type Operation int8
-
 type LocalClock struct {
 	mu    sync.Mutex
 	value int
+}
+
+type Operation int8
+
+const (
+	Internal Operation = iota
+	ExternalSingle
+	ExternalMultiple
+	Halt
+)
+
+func (o Operation) String() string {
+	switch o {
+	case Internal:
+		return "Internal"
+	case ExternalSingle:
+		return "External - Single Call"
+	case ExternalMultiple:
+		return "External - Multiple Calls"
+	case Halt:
+		return "Halt"
+	default:
+		return "Unknown"
+	}
 }

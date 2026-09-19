@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"math"
 	"math/rand"
 	"net/http"
@@ -18,7 +18,8 @@ func parseRequest(r *http.Request) Message {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&message)
 	if err != nil {
-		log.Fatalf("Error parsing JSON: %v", err)
+		slog.Error("Error parsing JSON: %v", err)
+		os.Exit(1)
 	}
 
 	return message
@@ -32,23 +33,23 @@ func increaseClock(c *LocalClock, receivedClock int) {
 
 	c.value = int(maxValue) + 1
 
-	log.Println("Clock increased, current clock value: ", c.value)
+	slog.Info("Clock increased, current clock value: ", c.value)
 }
 
 func callOperations(c *LocalClock) {
-	log.Println("Starting operations caller")
+	slog.Info("Starting operations caller")
 
 	for {
 		sleepTime := rand.Intn(5000)
-		log.Println("Operations caller :: sleeping for:", sleepTime)
+		slog.Debug("Operations caller :: sleeping for:", sleepTime)
 
 		time.Sleep(time.Duration(sleepTime) * time.Millisecond)
 
-		log.Println("Operations caller :: woke up, calling random operation")
+		slog.Debug("Operations caller :: woke up, calling random operation")
 
 		operation := rand.Intn(2)
 
-		log.Println("Operations caller :: chosen operation index:", operation)
+		slog.Debug("Operations caller :: chosen operation index: %s", operation)
 
 		if operation == 0 {
 			message := &Message{
@@ -61,7 +62,8 @@ func callOperations(c *LocalClock) {
 			peers := os.Getenv("PEERS")
 
 			if len(peers) < 0 {
-				log.Fatalf("No peers found")
+				slog.Error("No peers found")
+				os.Exit(1)
 			}
 
 			peersList := strings.Split(peers, ",")
